@@ -61,11 +61,9 @@
       "versions": [
         {
           "version": "0.1.0",
-          "publishTimestamp": 1792999632,
+          "publishTimestamp": 1793001660,
           "source": {
-            "type": "git",
-            "url": "https://github.com/MOS-ink/dsh-agent-rules",
-            "commit": "e375b77d649bb3e0913178ff19e4978da67577e3"
+            "type": "npm"
           },
           "engines": {
             "dsh": ">=0.2.0"

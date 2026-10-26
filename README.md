@@ -14,7 +14,13 @@ Rules are rendered into the managed block of `~/.dsh/AGENTS.md`. The bundled `@d
 
 ## Install
 
-From the plugin page, add this market index source and install `dsh-agent-rules`:
+From npm — the official registry and the mainland China mirror both serve the same tarball:
+
+```powershell
+dsh plugin --profile <name> add dsh-agent-rules
+```
+
+To install through the plugin market, add this index source and pick the entry in the Discover tab:
 
 ```
 https://cdn.jsdelivr.net/gh/MOS-ink/dsh-agent-rules@main/market/index.json

@@ -14,7 +14,13 @@ DeepSeek Harness 插件：在设置里加一页 **规则与记忆**，把长期�
 
 ## 安装
 
-在插件页添加下面的市场索引源，然后安装 `dsh-agent-rules`：
+从 npm 安装——官方源与国内镜像提供同一份 tarball：
+
+```powershell
+dsh plugin --profile <profile> add dsh-agent-rules
+```
+
+走插件市场安装，先添加下面的索引源，再到「发现」页选条目：
 
 ```
 https://cdn.jsdelivr.net/gh/MOS-ink/dsh-agent-rules@main/market/index.json
