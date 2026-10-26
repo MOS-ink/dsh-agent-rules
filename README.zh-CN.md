@@ -17,6 +17,12 @@ DeepSeek Harness 插件：在设置里加一页 **规则与记忆**，把长期�
 在插件页添加下面的市场索引源，然后安装 `dsh-agent-rules`：
 
 ```
+https://cdn.jsdelivr.net/gh/MOS-ink/dsh-agent-rules@main/market/index.json
+```
+
+GitHub raw 提供同一份文档，不带 CDN 缓存：
+
+```
 https://raw.githubusercontent.com/MOS-ink/dsh-agent-rules/main/market/index.json
 ```
 

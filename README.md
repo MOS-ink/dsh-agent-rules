@@ -17,6 +17,12 @@ Rules are rendered into the managed block of `~/.dsh/AGENTS.md`. The bundled `@d
 From the plugin page, add this market index source and install `dsh-agent-rules`:
 
 ```
+https://cdn.jsdelivr.net/gh/MOS-ink/dsh-agent-rules@main/market/index.json
+```
+
+The raw GitHub URL serves the same document without the CDN cache:
+
+```
 https://raw.githubusercontent.com/MOS-ink/dsh-agent-rules/main/market/index.json
 ```
 
