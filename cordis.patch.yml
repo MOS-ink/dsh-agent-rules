@@ -1,0 +1,10 @@
+# dsh-agent-rules bundle patch
+#
+# 挂 Host 半侧（/dsh-agent-rules 读写接口 + AGENTS.md 渲染）。
+# Web 半侧由 package.json 的 dsh.client 声明，宿主自动组装，这里不用写。
+#
+# 本地开发安装：
+#   dsh plugin --profile desktop add link:D:\Projects\dsh_orb\theme-lab\dsh-agent-rules
+- insert:
+    - id: dsh-agent-rules
+      name: dsh-agent-rules

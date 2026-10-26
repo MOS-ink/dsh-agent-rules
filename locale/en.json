@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Agent Rules",
+    "description": "Manage long-lived preset rules in Settings; they render into ~/.dsh/AGENTS.md and are injected into every new session."
+  }
+}
