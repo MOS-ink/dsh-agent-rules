@@ -1,0 +1,40 @@
+name: publish
+
+# 打 tag 即发布：git tag v0.1.0 && git push --tags
+# 需要先在仓库 Settings → Secrets 里加 NPM_TOKEN（Granular token，
+# 权限 Packages: read/write，范围限定 dsh-agent-rules）。
+# npmmirror 会自己从 npm 官方源同步，这里不用管。
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag $tag 与 package.json 的 $pkg 不一致"
+            exit 1
+          fi
+
+      - run: npm test
+
+      - run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

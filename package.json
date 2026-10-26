@@ -1,15 +1,17 @@
 {
   "name": "dsh-agent-rules",
   "version": "0.1.0",
-  "private": true,
   "description": "DeepSeek Harness 全局规则面板：在设置页统一管理长期生效的预设规则，渲染进 ~/.dsh/AGENTS.md，由 DSH 内置指令加载器在每个新会话注入。",
   "keywords": [
     "dsh",
     "dsh-plugin",
+    "deepseek",
     "deepseek-harness",
     "rules",
     "agents-md",
-    "prompt"
+    "prompt",
+    "settings",
+    "memory"
   ],
   "type": "module",
   "main": "index.js",
@@ -42,5 +44,23 @@
   "engines": {
     "node": ">=20"
   },
-  "license": "MIT"
+  "scripts": {
+    "test": "node --test",
+    "validate": "node scripts/validate-index.mjs market/index.json https://cdn.jsdelivr.net/gh/MOS-ink/dsh-agent-rules@main/market/index.json",
+    "release": "node scripts/publish.mjs"
+  },
+  "author": "MOS-ink",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MOS-ink/dsh-agent-rules.git"
+  },
+  "homepage": "https://github.com/MOS-ink/dsh-agent-rules#readme",
+  "bugs": {
+    "url": "https://github.com/MOS-ink/dsh-agent-rules/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
