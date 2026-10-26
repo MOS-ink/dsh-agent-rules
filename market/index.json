@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "title": {
+    "en": "MOS ink · DSH plugins",
+    "zh": "MOS ink · DSH 插件源"
+  },
+  "description": {
+    "en": "Plugins for DeepSeek Harness maintained by MOS-ink.",
+    "zh": "MOS-ink 维护的 DeepSeek Harness 插件索引。"
+  },
+  "metadata": {
+    "categories": {
+      "interface": {
+        "title": { "en": "Interface", "zh": "界面" }
+      },
+      "workflow": {
+        "title": { "en": "Workflow", "zh": "工作流" }
+      }
+    },
+    "labels": {
+      "rules": {
+        "title": { "en": "Rules", "zh": "规则" }
+      },
+      "agents-md": {
+        "title": { "en": "AGENTS.md", "zh": "AGENTS.md" }
+      },
+      "settings": {
+        "title": { "en": "Settings", "zh": "设置" }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "name": "dsh-agent-rules",
+      "title": {
+        "en": "Rules & Memory",
+        "zh": "规则与记忆"
+      },
+      "description": {
+        "en": "Manage long-lived preset rules in Settings. They render into the managed block of ~/.dsh/AGENTS.md and are injected as workspace instructions in every new session.",
+        "zh": "在设置页统一管理长期生效的预设规则，渲染进 ~/.dsh/AGENTS.md 的托管块，由内置指令加载器在每个新会话注入。"
+      },
+      "icon": "icon.svg",
+      "author": "MOS-ink",
+      "homepage": "https://github.com/MOS-ink/dsh-agent-rules#readme",
+      "repository": {
+        "url": "https://github.com/MOS-ink/dsh-agent-rules"
+      },
+      "metadata": {
+        "category": "interface",
+        "keywords": [
+          "rules",
+          "agents-md",
+          "prompt",
+          "settings",
+          "memory",
+          "instructions"
+        ],
+        "labels": ["rules", "agents-md", "settings"]
+      },
+      "versions": [
+        {
+          "version": "0.1.0",
+          "publishTimestamp": 1792999632,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/MOS-ink/dsh-agent-rules",
+            "commit": "e375b77d649bb3e0913178ff19e4978da67577e3"
+          },
+          "engines": {
+            "dsh": ">=0.2.0"
+          }
+        }
+      ]
+    }
+  ]
+}
