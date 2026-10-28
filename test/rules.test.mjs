@@ -3,12 +3,17 @@ import test from 'node:test'
 import {
   BLOCK_END,
   BLOCK_START,
+  agentsSectionFromBaseline,
+  diffRules,
+  digestsOfTexts,
+  incrementalChanges,
   manualBytes,
   mergeAgentsMd,
   normalizeRules,
   parseBlockRules,
   parseRulesFromMd,
   renderBlock,
+  sha1Hex,
   splitAgentsMd,
 } from '../rules.js'
 
@@ -108,4 +113,57 @@ test('parseRulesFromMd ignores the managed block', () => {
   const block = renderBlock([{ id: 'a', text: '托管规则', enabled: true }])
   const merged = mergeAgentsMd('手写一条\n', block)
   assert.deepEqual(parseRulesFromMd(merged), ['手写一条'])
+})
+
+test('agentsSectionFromBaseline takes the first AGENTS.md section only', () => {
+  const block = renderBlock([{ id: 'a', text: '规则甲', enabled: true }, { id: 'b', text: '规则乙', enabled: true }])
+  const body = [
+    '<system-reminder>',
+    'intro',
+    '',
+    'Instructions from: ~/.dsh/AGENTS.md',
+    '',
+    block,
+    '',
+    'Instructions from: AGENTS.md',
+    '',
+    '项目里的另一份指令',
+    '</system-reminder>',
+  ].join('\n')
+  const section = agentsSectionFromBaseline(body)
+  assert.ok(section.includes(BLOCK_START))
+  assert.ok(section.includes('规则乙'))
+  assert.ok(!section.includes('项目里的另一份指令'), '不能把下一段吞进来')
+  assert.deepEqual(parseBlockRules(section), ['规则甲', '规则乙'])
+})
+
+test('agentsSectionFromBaseline returns empty text when nothing matches', () => {
+  assert.equal(agentsSectionFromBaseline('<system-reminder>\nNo workspace instructions are currently active.\n</system-reminder>'), '')
+  assert.equal(agentsSectionFromBaseline(''), '')
+})
+
+test('diffRules compares digest sets, so an edit is one add plus one remove', () => {
+  const anchor = digestsOfTexts(['规则甲', '规则乙'])
+  const edited = diffRules(anchor, [
+    { id: 'a', text: '规则甲改过' },
+    { id: 'b', text: '规则乙' },
+    { id: 'c', text: '规则丙' },
+  ])
+  assert.deepEqual(edited.added.map((item) => item.text), ['规则甲改过', '规则丙'])
+  assert.deepEqual(edited.removed, [sha1Hex('规则甲')])
+  assert.deepEqual(incrementalChanges(edited), [
+    { action: 'add', digest: sha1Hex('规则甲改过') },
+    { action: 'add', digest: sha1Hex('规则丙') },
+    { action: 'remove', digest: sha1Hex('规则甲') },
+  ])
+})
+
+test('diffRules ignores disabled rules on both sides', () => {
+  const anchor = digestsOfTexts(['规则甲'])
+  const diff = diffRules(anchor, [
+    { id: 'a', text: '规则甲' },
+    { id: 'b', text: '规则乙', enabled: false },
+  ])
+  assert.equal(diff.added.length, 0)
+  assert.equal(diff.removed.length, 0)
 })

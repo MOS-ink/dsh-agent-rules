@@ -10,7 +10,7 @@ Rules are rendered into the managed block of `~/.dsh/AGENTS.md`. The bundled `@d
 - **Manual content is preserved.** Everything outside the `<!-- dsh-agent-rules:start -->` / `<!-- dsh-agent-rules:end -->` markers is left untouched. When hand-written content is detected, the panel offers to import it into the list.
 - **Disabled rules stay on disk.** Turning a rule off removes it from `AGENTS.md` but keeps its text and ID in the JSON store.
 - **No system-prompt rewrite.** The plugin does not hook prompt assembly. It writes the file the official instruction loader already reads.
-- **Scope.** Rules take effect when a new conversation starts. A conversation that is already open keeps the instructions it was created with.
+- **Open conversations are caught up.** A conversation receives the full list as workspace instructions when it starts. When rules change afterwards, its next turn carries one reminder containing only the added or edited rules; removed or disabled ones are announced in a single line. The comparison anchors on the rules parsed out of that conversation's own baseline message, so nothing is replayed twice.
 
 ## Install
 

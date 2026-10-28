@@ -1,6 +1,6 @@
 {
   "name": "dsh-agent-rules",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DeepSeek Harness 全局规则面板：在设置页统一管理长期生效的预设规则，渲染进 ~/.dsh/AGENTS.md，由 DSH 内置指令加载器在每个新会话注入。",
   "keywords": [
     "dsh",

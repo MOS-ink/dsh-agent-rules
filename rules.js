@@ -10,6 +10,8 @@
  * 面板不会覆盖用户自己写的东西。
  */
 
+import { createHash } from 'node:crypto'
+
 export const BLOCK_START = '<!-- dsh-agent-rules:start -->'
 export const BLOCK_END = '<!-- dsh-agent-rules:end -->'
 export const MAX_RULES = 200
@@ -158,4 +160,132 @@ export function manualBytes(existing) {
   const { before, after } = splitAgentsMd(existing)
   const manual = [before, after].join('\n').trim()
   return manual ? Buffer.byteLength(manual, 'utf8') : 0
+}
+
+// ── 增量注入：摘要、对账与提醒文案 ──────────────────────────────────────────
+
+/** 一段文本的 SHA-1。官方指令加载器对 AGENTS.md 用的就是这个算法，两边必须一致。 */
+export function sha1Hex(text) {
+  return createHash('sha1').update(String(text ?? ''), 'utf8').digest('hex')
+}
+
+/** 一条规则的内容摘要；改字即变值，用来判断「这条被改过」。 */
+export function ruleDigest(rule) {
+  return sha1Hex(normalizeText(rule?.text))
+}
+
+/** 启用中的规则压成 [{id, digest}]，只在渲染历史里用（正文里没有 id，锚点不靠它）。 */
+export function digestRules(rules) {
+  return normalizeRules(rules)
+    .filter((rule) => rule.enabled)
+    .map((rule) => ({ id: rule.id, digest: ruleDigest(rule) }))
+}
+
+/**
+ * 从官方基线消息正文里取出 AGENTS.md 那一段。
+ *
+ * 基线正文是 `Instructions from: <显示路径>\n\n<文件全文>` 一段挨一段拼起来的。
+ * 用户全局文件排在最前，所以取第一个路径以 AGENTS.md 结尾的段即可：
+ * 那段没有托管块（说明会话启动时还没有规则）时返回空串，对账方按「一条都没下发过」处理，
+ * 这个语义是对的——模型确实没看见过。
+ *
+ * @param text 基线消息里那条 text part 的完整正文
+ */
+export function agentsSectionFromBaseline(text) {
+  const body = String(text ?? '')
+  const marker = 'Instructions from: '
+  let at = body.indexOf(marker)
+  while (at >= 0) {
+    const lineEnd = body.indexOf('\n', at)
+    const path = (lineEnd < 0 ? body.slice(at + marker.length) : body.slice(at + marker.length, lineEnd)).trim()
+    if (path.endsWith('AGENTS.md')) {
+      const contentStart = lineEnd < 0 ? body.length : lineEnd
+      const nextHeader = body.indexOf('\n' + marker, contentStart)
+      const frameEnd = body.indexOf('</system-reminder>', contentStart)
+      let end = body.length
+      if (nextHeader >= 0) end = Math.min(end, nextHeader)
+      if (frameEnd >= 0) end = Math.min(end, frameEnd)
+      return body.slice(contentStart, end).trim()
+    }
+    at = body.indexOf(marker, at + marker.length)
+  }
+  return ''
+}
+
+/**
+ * 片段文本 → 摘要集合。这是锚点的唯一身份：正文里没有规则 id，
+ * 同一段文字就是同一条规则，改一个字就是另一条。
+ */
+export function digestsOfTexts(texts) {
+  return (Array.isArray(texts) ? texts : []).map((text) => sha1Hex(normalizeText(text))).filter(Boolean)
+}
+
+/**
+ * 当前规则相比锚点集合有什么变化。纯集合运算：
+ * 当前有、锚点没有 → 新增；锚点有、当前没有 → 移除（改文本自然是一删一增）。
+ * @param anchor 会话已经看到过的规则摘要数组
+ * @param rules 当前规则列表
+ */
+export function diffRules(anchor, rules) {
+  const before = new Set()
+  for (const digest of Array.isArray(anchor) ? anchor : []) {
+    if (typeof digest === 'string' && digest) before.add(digest)
+  }
+  const current = new Set()
+  const added = []
+  for (const rule of normalizeRules(rules)) {
+    if (!rule.enabled) continue
+    const digest = ruleDigest(rule)
+    if (current.has(digest)) continue
+    current.add(digest)
+    if (!before.has(digest)) added.push({ text: rule.text, digest })
+  }
+  const removed = [...before].filter((digest) => !current.has(digest))
+  return { added, removed }
+}
+
+/** 有没有值得一提的变化。 */
+export function hasDiff(diff) {
+  return Boolean(diff && (diff.added.length || diff.removed.length))
+}
+
+/** 规则正文不能带出框架的闭合标签，否则模型会把注入框提前关掉。 */
+function escapeFrameBody(body) {
+  return String(body ?? '').replaceAll('</system-reminder>', '<\\/system-reminder>')
+}
+
+/**
+ * 渲染增量提醒的模型可见文本。
+ * 只列新增/改动后的规则原文；消失的那些合并成一行——它们的旧文本不再有意义。
+ */
+export function renderIncrementalReminder(diff) {
+  if (!hasDiff(diff)) return ''
+  const blocks = []
+  if (diff.added.length) {
+    blocks.push(
+      'The global agent rules changed after this session started. ' +
+        'The rules below were added or edited since then; where they conflict with rules loaded earlier in this conversation, these take precedence.',
+    )
+    blocks.push(diff.added.map((item) => renderRuleLine({ text: item.text })).filter(Boolean).join('\n'))
+  }
+  if (diff.removed.length) {
+    const count = diff.removed.length
+    blocks.push(
+      count === 1
+        ? '1 rule was removed, disabled, or replaced by an edited version and no longer applies.'
+        : `${count} rules were removed, disabled, or replaced by edited versions and no longer apply.`,
+    )
+  }
+  return ['<system-reminder>', escapeFrameBody(blocks.join('\n\n')), '</system-reminder>'].join('\n')
+}
+
+/**
+ * 增量消息的 source.changes：只带摘要，不带 id。
+ * 下一次对账就是拿这些摘要做集合加减，所以消息本身完全自描述。
+ */
+export function incrementalChanges(diff) {
+  return [
+    ...diff.added.map((item) => ({ action: 'add', digest: item.digest })),
+    ...diff.removed.map((digest) => ({ action: 'remove', digest })),
+  ]
 }
